@@ -80,7 +80,7 @@ namespace http2timer
 
             // Retrieve the cached approximate message count.
             int? cachedMessageCount = queue.ApproximateMessageCount;
-            Debug.WriteLine("11111111111111111111111111111111111111111111111111111111111111111111111111:::::::::::::" + cachedMessageCount);
+           // Debug.WriteLine("11111111111111111111111111111111111111111111111111111111111111111111111111:::::::::::::" + cachedMessageCount);
 
 
             int numberofqueries = (int)cachedMessageCount;
@@ -101,33 +101,46 @@ namespace http2timer
                     string session_id = peekedMessage.ToString();
                     
                     string url = "https://service.na1.liveassistfor365.com/api/transcript/v1/organization/" + org_id + "/chatsession/" + session_id;
+                    try
+                    {
 
-                    var client = new RestClient(url);
-                    var request = new RestRequest(Method.GET);
-                    request.AddHeader("postman-token", "5d2a6c60-2b0f-5074-1b84-848ce83bbcc2");
-                    request.AddHeader("cache-control", "no-cache");
-                    request.AddHeader("authorization", "Bearer " + authorization);
-                    IRestResponse response = client.Execute(request);
-                    var content = response.Content;
-                //Console.WriteLine(content);
+                        var client = new RestClient(url);
+                        var request = new RestRequest(Method.GET);
+                        request.AddHeader("postman-token", "5d2a6c60-2b0f-5074-1b84-848ce83bbcc2");
+                        request.AddHeader("cache-control", "no-cache");
+                        request.AddHeader("authorization", "Bearer " + authorization);
+                        IRestResponse response = client.Execute(request);
+                        var content = response.Content;
+                        //Console.WriteLine(content);
 
 
-                // Get the next message
-                var retrievedMessage =  await queue.GetMessageAsync();
+                       // Get the next message
+                        var retrievedMessage =  await queue.GetMessageAsync();
 
-                    //Process the message in less than 30 seconds, and then delete the message
-                   await queue.DeleteMessageAsync(retrievedMessage);
+                        //Process the message in less than 30 seconds, and then delete the message
+                       await queue.DeleteMessageAsync(retrievedMessage);
 
-                    numberofqueries--;
+                        numberofqueries--;
                     
 
 
-                    //chatTable.ExecuteAsync(TableOperation.Insert(new ScoreEntity("97649434294967498", content)));
-                    await chatTable.ExecuteBatchAsync(new TableBatchOperation(){
-                    TableOperation.Insert(new ScoreEntity(session_id, content))
-                     });
+                        //chatTable.ExecuteAsync(TableOperation.Insert(new ScoreEntity("97649434294967498", content)));
+                        await chatTable.ExecuteBatchAsync(new TableBatchOperation(){
+                        TableOperation.Insert(new ScoreEntity(session_id, content))
+                        });
 
-                    Console.WriteLine("Completed");
+                        
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("CAFEx API is down Please try later" + ex.Message);
+                    }
+                    finally
+                    {
+                        Console.WriteLine("completed");
+                    }
+
+
                 }
                 else
                 {
